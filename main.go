@@ -28,8 +28,8 @@ func main() {
 	}
 
 	store := NewStore(db)
-	svc := NewService(store)
-	mux := NewRouter(svc)
+	app := NewApp(store)
+	mux := NewRouter(app)
 
 	log.Printf("BarterSwap écoute sur %s", addr)
 	if err := http.ListenAndServe(addr, mux); err != nil {

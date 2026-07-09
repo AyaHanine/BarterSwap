@@ -1,0 +1,650 @@
+{
+  "info": {
+    "_postman_id": "b2c3d4e5-f6a7-8901-bcde-barterswapservices",
+    "name": "BarterSwap — Gestion des services",
+    "description": "Tous les cas de test de la partie annonces de services.\n\nPrérequis : API démarrée (`docker compose up --build`) sur http://localhost:8081\n\nExécuter dans l'ordre (Collection Runner) : les scripts créent un user + skills puis testent les services.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8081" },
+    { "key": "userId", "value": "1" },
+    { "key": "otherUserId", "value": "2" },
+    { "key": "serviceId", "value": "1" },
+    { "key": "suffix", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "0. Setup utilisateurs",
+      "item": [
+        {
+          "name": "POST créer provider — 201",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.collectionVariables.set('suffix', Date.now().toString() + Math.floor(Math.random()*1000));"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const u = pm.response.json();",
+                  "pm.collectionVariables.set('userId', String(u.id));",
+                  "console.log('userId=', u.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pseudo\": \"provider_{{suffix}}\",\n  \"ville\": \"Lyon\"\n}"
+            },
+            "url": "{{baseUrl}}/api/users"
+          }
+        },
+        {
+          "name": "PUT skills provider — 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-User-ID", "value": "{{userId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"skills\": [\n    { \"nom\": \"Jardinage\", \"niveau\": \"expert\" },\n    { \"nom\": \"Cuisine\", \"niveau\": \"débutant\" },\n    { \"nom\": \"Sport\", \"niveau\": \"intermédiaire\" }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/api/users/{{userId}}/skills"
+          }
+        },
+        {
+          "name": "POST créer other — 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('otherUserId', String(pm.response.json().id));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pseudo\": \"other_{{suffix}}\",\n  \"ville\": \"Paris\"\n}"
+            },
+            "url": "{{baseUrl}}/api/users"
+          }
+        },
+        {
+          "name": "PUT skills other — 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-User-ID", "value": "{{otherUserId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"skills\": [\n    { \"nom\": \"Jardinage\", \"niveau\": \"débutant\" }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/api/users/{{otherUserId}}/skills"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Création service",
+      "item": [
+        {
+          "name": "POST sans auth — 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('Status 401', () => pm.response.to.have.status(401));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titre\": \"Taille de haies\",\n  \"categorie\": \"Jardinage\",\n  \"duree_minutes\": 60,\n  \"credits\": 2\n}"
+            },
+            "url": "{{baseUrl}}/api/services"
+          }
+        },
+        {
+          "name": "POST sans compétence — 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-User-ID", "value": "{{userId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titre\": \"Cours de piano\",\n  \"categorie\": \"Musique\",\n  \"duree_minutes\": 45,\n  \"credits\": 3\n}"
+            },
+            "url": "{{baseUrl}}/api/services"
+          }
+        },
+        {
+          "name": "POST catégorie invalide — 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-User-ID", "value": "{{userId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titre\": \"Magie\",\n  \"categorie\": \"Magie\",\n  \"duree_minutes\": 30,\n  \"credits\": 1\n}"
+            },
+            "url": "{{baseUrl}}/api/services"
+          }
+        },
+        {
+          "name": "POST titre vide — 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-User-ID", "value": "{{userId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titre\": \"\",\n  \"categorie\": \"Jardinage\",\n  \"duree_minutes\": 60,\n  \"credits\": 2\n}"
+            },
+            "url": "{{baseUrl}}/api/services"
+          }
+        },
+        {
+          "name": "POST durée invalide — 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-User-ID", "value": "{{userId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titre\": \"x\",\n  \"categorie\": \"Jardinage\",\n  \"duree_minutes\": 0,\n  \"credits\": 2\n}"
+            },
+            "url": "{{baseUrl}}/api/services"
+          }
+        },
+        {
+          "name": "POST crédits invalides — 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-User-ID", "value": "{{userId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titre\": \"x\",\n  \"categorie\": \"Jardinage\",\n  \"duree_minutes\": 30,\n  \"credits\": 0\n}"
+            },
+            "url": "{{baseUrl}}/api/services"
+          }
+        },
+        {
+          "name": "POST créer service — 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const s = pm.response.json();",
+                  "pm.test('actif true', () => pm.expect(s.actif).to.eql(true));",
+                  "pm.collectionVariables.set('serviceId', String(s.id));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-User-ID", "value": "{{userId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titre\": \"Taille de haies\",\n  \"description\": \"Je taille vos haies\",\n  \"categorie\": \"Jardinage\",\n  \"duree_minutes\": 60,\n  \"credits\": 2,\n  \"ville\": \"Lyon\"\n}"
+            },
+            "url": "{{baseUrl}}/api/services"
+          }
+        },
+        {
+          "name": "POST service cuisine — 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('Status 201', () => pm.response.to.have.status(201));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-User-ID", "value": "{{userId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titre\": \"Cours de pâtisserie\",\n  \"description\": \"gâteaux\",\n  \"categorie\": \"Cuisine\",\n  \"duree_minutes\": 90,\n  \"credits\": 3,\n  \"ville\": \"Paris\"\n}"
+            },
+            "url": "{{baseUrl}}/api/services"
+          }
+        },
+        {
+          "name": "POST service sport — 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('Status 201', () => pm.response.to.have.status(201));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-User-ID", "value": "{{userId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titre\": \"Coaching running\",\n  \"description\": \"préparation 10km\",\n  \"categorie\": \"Sport\",\n  \"duree_minutes\": 45,\n  \"credits\": 2,\n  \"ville\": \"Lyon\"\n}"
+            },
+            "url": "{{baseUrl}}/api/services"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Lecture et filtres",
+      "item": [
+        {
+          "name": "GET détail service — 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('titre', () => pm.expect(pm.response.json().titre).to.eql('Taille de haies'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/services/{{serviceId}}"
+          }
+        },
+        {
+          "name": "GET service inexistant — 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('Status 404', () => pm.response.to.have.status(404));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/services/99999"
+          }
+        },
+        {
+          "name": "GET liste — 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('au moins 3', () => pm.expect(pm.response.json().length).to.be.at.least(3));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/services"
+          }
+        },
+        {
+          "name": "GET filtre categorie — 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const list = pm.response.json();",
+                  "pm.test('tous Jardinage', () => list.forEach(s => pm.expect(s.categorie).to.eql('Jardinage')));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/services?categorie=Jardinage"
+          }
+        },
+        {
+          "name": "GET filtre ville — 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const list = pm.response.json();",
+                  "pm.test('tous Lyon', () => list.forEach(s => pm.expect(s.ville.toLowerCase()).to.eql('lyon')));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/services?ville=Lyon"
+          }
+        },
+        {
+          "name": "GET search — 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('trouve pâtisserie', () => {",
+                  "  const list = pm.response.json();",
+                  "  pm.expect(list.some(s => s.titre.includes('pâtisserie'))).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/services?search=pâtisserie"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Modification / suppression",
+      "item": [
+        {
+          "name": "PUT sans auth — 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('Status 401', () => pm.response.to.have.status(401));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titre\": \"hack\"\n}"
+            },
+            "url": "{{baseUrl}}/api/services/{{serviceId}}"
+          }
+        },
+        {
+          "name": "PUT autre user — 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('Status 403', () => pm.response.to.have.status(403));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-User-ID", "value": "{{otherUserId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titre\": \"hack\"\n}"
+            },
+            "url": "{{baseUrl}}/api/services/{{serviceId}}"
+          }
+        },
+        {
+          "name": "PUT succès — 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const s = pm.response.json();",
+                  "pm.test('titre', () => pm.expect(s.titre).to.eql('Taille de haies (pro)'));",
+                  "pm.test('credits', () => pm.expect(s.credits).to.eql(3));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-User-ID", "value": "{{userId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titre\": \"Taille de haies (pro)\",\n  \"credits\": 3\n}"
+            },
+            "url": "{{baseUrl}}/api/services/{{serviceId}}"
+          }
+        },
+        {
+          "name": "PUT catégorie sans skill — 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-User-ID", "value": "{{userId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categorie\": \"Informatique\"\n}"
+            },
+            "url": "{{baseUrl}}/api/services/{{serviceId}}"
+          }
+        },
+        {
+          "name": "DELETE sans auth — 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('Status 401', () => pm.response.to.have.status(401));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/services/{{serviceId}}"
+          }
+        },
+        {
+          "name": "DELETE autre user — 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('Status 403', () => pm.response.to.have.status(403));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "X-User-ID", "value": "{{otherUserId}}" }],
+            "url": "{{baseUrl}}/api/services/{{serviceId}}"
+          }
+        },
+        {
+          "name": "DELETE succès — 204",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('Status 204', () => pm.response.to.have.status(204));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "X-User-ID", "value": "{{userId}}" }],
+            "url": "{{baseUrl}}/api/services/{{serviceId}}"
+          }
+        },
+        {
+          "name": "GET après delete — 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('Status 404', () => pm.response.to.have.status(404));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/services/{{serviceId}}"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -52,6 +52,23 @@ CREATE TABLE IF NOT EXISTS credit_transactions (
     type         TEXT NOT NULL,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS services (
+    id              SERIAL PRIMARY KEY,
+    provider_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    titre           TEXT NOT NULL,
+    description     TEXT NOT NULL DEFAULT '',
+    categorie       TEXT NOT NULL,
+    duree_minutes   INTEGER NOT NULL,
+    credits         INTEGER NOT NULL,
+    ville           TEXT NOT NULL DEFAULT '',
+    actif           BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_services_categorie ON services (categorie);
+CREATE INDEX IF NOT EXISTS idx_services_ville ON services (ville);
+CREATE INDEX IF NOT EXISTS idx_services_provider ON services (provider_id);
 `
 	if _, err := db.Exec(schema); err != nil {
 		return fmt.Errorf("exec schema: %w", err)
