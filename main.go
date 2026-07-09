@@ -14,7 +14,7 @@ func main() {
 
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
-		dbURL = "postgres://barterswap:barterswap@localhost:5432/barterswap?sslmode=disable"
+		dbURL = "postgres://barterswap:barterswap@localhost:5435/barterswap?sslmode=disable"
 	}
 
 	db, err := openDB(dbURL)

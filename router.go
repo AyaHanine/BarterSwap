@@ -10,7 +10,11 @@ func NewRouter(svc *Service) http.Handler {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
 
-	// Les routes utilisateurs seront branchées ici (gestion des utilisateurs).
+	mux.HandleFunc("POST /api/users", svc.handleCreateUser)
+	mux.HandleFunc("GET /api/users/{id}", svc.handleGetUser)
+	mux.HandleFunc("PUT /api/users/{id}", svc.handleUpdateUser)
+	mux.HandleFunc("GET /api/users/{id}/skills", svc.handleGetUserSkills)
+	mux.HandleFunc("PUT /api/users/{id}/skills", svc.handleSetUserSkills)
 
 	return chain(mux, recoveryMiddleware, loggingMiddleware, corsMiddleware)
 }

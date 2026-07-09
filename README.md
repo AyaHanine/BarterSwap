@@ -31,12 +31,12 @@ cd BarterSwap
 docker compose up --build
 ```
 
-L'API est disponible sur `http://localhost:8080`.
+L'API est disponible sur `http://localhost:8081` (PostgreSQL exposé sur le port `5435` pour éviter les conflits locaux).
 
 Vérifier que le service répond :
 
 ```bash
-curl http://localhost:8080/health
+curl http://localhost:8081/health
 ```
 
 ### Sans Docker
@@ -57,18 +57,27 @@ go run .
 | Méthode | Path | Description |
 |---------|------|-------------|
 | GET | `/health` | Santé du service |
+| POST | `/api/users` | Créer un compte (10 crédits de bienvenue) |
+| GET | `/api/users/{id}` | Profil public d'un utilisateur |
+| PUT | `/api/users/{id}` | Modifier son profil (`X-User-ID` requis) |
+| GET | `/api/users/{id}/skills` | Compétences d'un utilisateur |
+| PUT | `/api/users/{id}/skills` | Définir ses compétences (`X-User-ID` requis) |
 
-Les endpoints métier (utilisateurs, services, échanges, avis, stats) seront documentés au fur et à mesure de leur implémentation.
-
-### 1. Gestion des utilisateurs (à venir)
+### 1. Gestion des utilisateurs
 
 | Méthode | Path | Description |
 |---------|------|-------------|
-| POST | `/api/users` | Créer un compte (10 crédits de bienvenue) |
+| POST | `/api/users` | Créer un compte (crédits de bienvenue attribués automatiquement) |
 | GET | `/api/users/{id}` | Profil public d'un utilisateur |
 | PUT | `/api/users/{id}` | Modifier son profil |
 | GET | `/api/users/{id}/skills` | Compétences d'un utilisateur |
 | PUT | `/api/users/{id}/skills` | Définir ses compétences |
+
+**Règles :**
+- À la création, **10 crédits de bienvenue** sont attribués (journalisés dans `credit_transactions`).
+- Les skills sont **écrasées** à chaque `PUT` (pas d'ajout individuel).
+- Niveaux acceptés : `débutant`, `intermédiaire`, `expert`.
+- `PUT` nécessite le header `X-User-ID` égal à `{id}`.
 
 ### 2. Gestion des annonces de services (à venir)
 
@@ -108,16 +117,83 @@ Les endpoints métier (utilisateurs, services, échanges, avis, stats) seront do
 
 ## Exemples d'utilisation
 
+### Créer un utilisateur (201)
+
 ```bash
-# Santé du service
-curl -s http://localhost:8080/health
+curl -s -X POST http://localhost:8081/api/users \
+  -H 'Content-Type: application/json' \
+  -d '{"pseudo":"alice","bio":"Jardinage & bricolage","ville":"Lyon"}'
+```
+
+Réponse attendue (extrait) :
+
+```json
+{
+  "id": 1,
+  "pseudo": "alice",
+  "bio": "Jardinage & bricolage",
+  "ville": "Lyon",
+  "credit_balance": 10,
+  "created_at": "2026-07-09T12:00:00Z"
+}
+```
+
+### Pseudo vide → 400
+
+```bash
+curl -s -X POST http://localhost:8081/api/users \
+  -H 'Content-Type: application/json' \
+  -d '{"pseudo":""}'
+```
+
+### Définir ses compétences
+
+```bash
+curl -s -X PUT http://localhost:8081/api/users/1/skills \
+  -H 'Content-Type: application/json' \
+  -H 'X-User-ID: 1' \
+  -d '{"skills":[{"nom":"Jardinage","niveau":"expert"},{"nom":"Cuisine","niveau":"débutant"}]}'
+```
+
+### Lire le profil public
+
+```bash
+curl -s http://localhost:8081/api/users/1
+```
+
+### Modifier son profil
+
+```bash
+curl -s -X PUT http://localhost:8081/api/users/1 \
+  -H 'Content-Type: application/json' \
+  -H 'X-User-ID: 1' \
+  -d '{"bio":"Passionnée de jardinage","ville":"Nantes"}'
 ```
 
 ## Tests
 
+Prérequis : PostgreSQL accessible (par ex. `docker compose up -d db`).
+
 ```bash
+# démarrer uniquement la base
+docker compose up -d db
+
+# lancer les tests avec couverture
 go test -v -cover ./...
 ```
+
+Cas couverts (gestion des utilisateurs) :
+
+| Cas | Résultat attendu |
+|-----|------------------|
+| Créer un utilisateur | `201` + `credit_balance = 10` |
+| Créer un utilisateur avec pseudo vide | `400` |
+| Pseudo déjà utilisé | `409` |
+| GET profil inexistant | `404` |
+| PUT sans `X-User-ID` | `401` |
+| PUT avec un autre `X-User-ID` | `403` |
+| PUT skills (écrasement) | `200` + liste remplacée |
+| Niveau de skill invalide | `400` |
 
 ## Architecture
 
