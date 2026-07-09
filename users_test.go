@@ -24,7 +24,7 @@ func testDSN(t *testing.T) string {
 	return dsn
 }
 
-func setupTestAPI(t *testing.T) (*Service, http.Handler, func()) {
+func setupTestAPI(t *testing.T) (*App, http.Handler, func()) {
 	t.Helper()
 	db, err := openDB(testDSN(t))
 	if err != nil {
@@ -37,20 +37,20 @@ func setupTestAPI(t *testing.T) (*Service, http.Handler, func()) {
 	cleanupTables(t, db)
 
 	store := NewStore(db)
-	svc := NewService(store)
-	handler := NewRouter(svc)
+	app := NewApp(store)
+	handler := NewRouter(app)
 
 	cleanup := func() {
 		cleanupTables(t, db)
 		_ = db.Close()
 	}
-	return svc, handler, cleanup
+	return app, handler, cleanup
 }
 
 func cleanupTables(t *testing.T, db *sql.DB) {
 	t.Helper()
 	_, err := db.Exec(`
-TRUNCATE credit_transactions, skills, users RESTART IDENTITY CASCADE`)
+TRUNCATE credit_transactions, skills, services, users RESTART IDENTITY CASCADE`)
 	if err != nil {
 		t.Fatalf("cleanup: %v", err)
 	}
@@ -295,7 +295,7 @@ func TestUserSkills(t *testing.T) {
 }
 
 func TestServiceCreateUserValidation(t *testing.T) {
-	svc := NewService(nil)
+	svc := NewApp(nil)
 	ctx := context.Background()
 	_, err := svc.CreateUser(ctx, "  ", "", "")
 	if !errors.Is(err, ErrValidation) {
@@ -304,7 +304,7 @@ func TestServiceCreateUserValidation(t *testing.T) {
 }
 
 func TestHealth(t *testing.T) {
-	h := NewRouter(NewService(NewStore(nil)))
+	h := NewRouter(NewApp(NewStore(nil)))
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	rr := httptest.NewRecorder()
 	h.ServeHTTP(rr, req)

@@ -22,14 +22,14 @@ type setSkillsRequest struct {
 	Skills []Skill `json:"skills"`
 }
 
-func (svc *Service) handleCreateUser(w http.ResponseWriter, r *http.Request) {
+func (app *App) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	var req createUserRequest
 	if err := decodeJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, "corps JSON invalide")
 		return
 	}
 
-	user, err := svc.CreateUser(r.Context(), req.Pseudo, req.Bio, req.Ville)
+	user, err := app.CreateUser(r.Context(), req.Pseudo, req.Bio, req.Ville)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -37,14 +37,14 @@ func (svc *Service) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, user)
 }
 
-func (svc *Service) handleGetUser(w http.ResponseWriter, r *http.Request) {
+func (app *App) handleGetUser(w http.ResponseWriter, r *http.Request) {
 	id, err := pathID(r, "id")
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "id invalide")
 		return
 	}
 
-	user, err := svc.GetUser(r.Context(), id)
+	user, err := app.GetUser(r.Context(), id)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -52,7 +52,7 @@ func (svc *Service) handleGetUser(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, user)
 }
 
-func (svc *Service) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
+func (app *App) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	id, err := pathID(r, "id")
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "id invalide")
@@ -70,7 +70,7 @@ func (svc *Service) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := svc.UpdateUser(r.Context(), actorID, id, req.Pseudo, req.Bio, req.Ville)
+	user, err := app.UpdateUser(r.Context(), actorID, id, req.Pseudo, req.Bio, req.Ville)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -78,14 +78,14 @@ func (svc *Service) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, user)
 }
 
-func (svc *Service) handleGetUserSkills(w http.ResponseWriter, r *http.Request) {
+func (app *App) handleGetUserSkills(w http.ResponseWriter, r *http.Request) {
 	id, err := pathID(r, "id")
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "id invalide")
 		return
 	}
 
-	skills, err := svc.GetUserSkills(r.Context(), id)
+	skills, err := app.GetUserSkills(r.Context(), id)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -93,7 +93,7 @@ func (svc *Service) handleGetUserSkills(w http.ResponseWriter, r *http.Request) 
 	writeJSON(w, http.StatusOK, skills)
 }
 
-func (svc *Service) handleSetUserSkills(w http.ResponseWriter, r *http.Request) {
+func (app *App) handleSetUserSkills(w http.ResponseWriter, r *http.Request) {
 	id, err := pathID(r, "id")
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "id invalide")
@@ -111,7 +111,7 @@ func (svc *Service) handleSetUserSkills(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	skills, err := svc.SetUserSkills(r.Context(), actorID, id, req.Skills)
+	skills, err := app.SetUserSkills(r.Context(), actorID, id, req.Skills)
 	if err != nil {
 		writeServiceError(w, err)
 		return

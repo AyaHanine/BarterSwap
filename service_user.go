@@ -13,7 +13,7 @@ var allowedSkillLevels = map[string]struct{}{
 }
 
 // CreateUser crée un compte et attribue 10 crédits de bienvenue.
-func (s *Service) CreateUser(ctx context.Context, pseudo, bio, ville string) (User, error) {
+func (s *App) CreateUser(ctx context.Context, pseudo, bio, ville string) (User, error) {
 	pseudo = normalizePseudo(pseudo)
 	if pseudo == "" {
 		return User{}, fmt.Errorf("%w: pseudo obligatoire", ErrValidation)
@@ -26,7 +26,7 @@ func (s *Service) CreateUser(ctx context.Context, pseudo, bio, ville string) (Us
 }
 
 // GetUser retourne le profil public d'un utilisateur.
-func (s *Service) GetUser(ctx context.Context, id int) (User, error) {
+func (s *App) GetUser(ctx context.Context, id int) (User, error) {
 	if id <= 0 {
 		return User{}, fmt.Errorf("%w: id invalide", ErrValidation)
 	}
@@ -34,7 +34,7 @@ func (s *Service) GetUser(ctx context.Context, id int) (User, error) {
 }
 
 // UpdateUser modifie le profil de l'utilisateur authentifié.
-func (s *Service) UpdateUser(ctx context.Context, actorID, userID int, pseudo, bio, ville *string) (User, error) {
+func (s *App) UpdateUser(ctx context.Context, actorID, userID int, pseudo, bio, ville *string) (User, error) {
 	if userID <= 0 {
 		return User{}, fmt.Errorf("%w: id invalide", ErrValidation)
 	}
@@ -65,7 +65,7 @@ func (s *Service) UpdateUser(ctx context.Context, actorID, userID int, pseudo, b
 }
 
 // GetUserSkills retourne les compétences d'un utilisateur.
-func (s *Service) GetUserSkills(ctx context.Context, userID int) ([]Skill, error) {
+func (s *App) GetUserSkills(ctx context.Context, userID int) ([]Skill, error) {
 	if userID <= 0 {
 		return nil, fmt.Errorf("%w: id invalide", ErrValidation)
 	}
@@ -76,7 +76,7 @@ func (s *Service) GetUserSkills(ctx context.Context, userID int) ([]Skill, error
 }
 
 // SetUserSkills remplace entièrement les compétences d'un utilisateur.
-func (s *Service) SetUserSkills(ctx context.Context, actorID, userID int, skills []Skill) ([]Skill, error) {
+func (s *App) SetUserSkills(ctx context.Context, actorID, userID int, skills []Skill) ([]Skill, error) {
 	if userID <= 0 {
 		return nil, fmt.Errorf("%w: id invalide", ErrValidation)
 	}

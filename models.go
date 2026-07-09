@@ -17,6 +17,20 @@ type Skill struct {
 	Niveau string `json:"niveau"` // "débutant", "intermédiaire", "expert"
 }
 
+// Service représente une annonce de service proposée par un utilisateur.
+type Service struct {
+	ID           int    `json:"id"`
+	ProviderID   int    `json:"provider_id"`
+	Titre        string `json:"titre"`
+	Description  string `json:"description,omitempty"`
+	Categorie    string `json:"categorie"`
+	DureeMinutes int    `json:"duree_minutes"` // durée estimée
+	Credits      int    `json:"credits"`       // coût en crédits-temps
+	Ville        string `json:"ville,omitempty"`
+	Actif        bool   `json:"actif"`
+	CreatedAt    string `json:"created_at"`
+}
+
 // CreditTransaction trace une opération sur le solde de crédits-temps.
 type CreditTransaction struct {
 	ID         int    `json:"id"`
