@@ -68,7 +68,7 @@ go run .
 | PUT | `/api/services/{id}` | Modifier son annonce (`X-User-ID` requis) |
 | DELETE | `/api/services/{id}` | Supprimer son annonce (`X-User-ID` requis) |
 
-### 1. Gestion des utilisateurs
+### 1. Gestion des utilisateurs ✅
 
 | Méthode | Path | Description |
 |---------|------|-------------|
@@ -84,7 +84,7 @@ go run .
 - Niveaux acceptés : `débutant`, `intermédiaire`, `expert`.
 - `PUT` nécessite le header `X-User-ID` égal à `{id}`.
 
-### 2. Gestion des annonces de services
+### 2. Gestion des annonces de services ✅
 
 | Méthode | Path | Description |
 |---------|------|-------------|
@@ -104,7 +104,7 @@ go run .
 - Filtrage / recherche **côté serveur** via query params.
 - `POST` / `PUT` / `DELETE` nécessitent `X-User-ID` = propriétaire de l'annonce.
 
-### 3. Système d'échange (à venir)
+### 3. Système d'échange
 
 | Méthode | Path | Description |
 |---------|------|-------------|
@@ -116,7 +116,7 @@ go run .
 | PUT | `/api/exchanges/{id}/complete` | Marquer comme terminé |
 | PUT | `/api/exchanges/{id}/cancel` | Annuler |
 
-### 4. Évaluations (à venir)
+### 4. Évaluations
 
 | Méthode | Path | Description |
 |---------|------|-------------|
@@ -124,7 +124,7 @@ go run .
 | GET | `/api/users/{id}/reviews` | Avis reçus par un utilisateur |
 | GET | `/api/services/{id}/reviews` | Avis sur un service |
 
-### 5. Tableau de bord / Statistiques (à venir)
+### 5. Tableau de bord / Statistiques
 
 | Méthode | Path | Description |
 |---------|------|-------------|
