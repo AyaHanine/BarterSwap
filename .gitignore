@@ -1,0 +1,21 @@
+# Binaries
+/barterswap
+*.exe
+*.test
+*.out
+
+# Dependencies
+vendor/
+
+# Environment
+.env
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Coverage
+coverage.out
+coverage.html
