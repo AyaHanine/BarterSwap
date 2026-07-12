@@ -22,5 +22,13 @@ func NewRouter(app *App) http.Handler {
 	mux.HandleFunc("PUT /api/services/{id}", app.handleUpdateService)
 	mux.HandleFunc("DELETE /api/services/{id}", app.handleDeleteService)
 
+	mux.HandleFunc("POST /api/exchanges", app.handleCreateExchange)
+	mux.HandleFunc("GET /api/exchanges", app.handleListExchanges)
+	mux.HandleFunc("GET /api/exchanges/{id}", app.handleGetExchange)
+	mux.HandleFunc("PUT /api/exchanges/{id}/accept", app.handleAcceptExchange)
+	mux.HandleFunc("PUT /api/exchanges/{id}/reject", app.handleRejectExchange)
+	mux.HandleFunc("PUT /api/exchanges/{id}/complete", app.handleCompleteExchange)
+	mux.HandleFunc("PUT /api/exchanges/{id}/cancel", app.handleCancelExchange)
+
 	return chain(mux, recoveryMiddleware, loggingMiddleware, corsMiddleware)
 }

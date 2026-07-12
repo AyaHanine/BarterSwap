@@ -31,6 +31,17 @@ type Service struct {
 	CreatedAt    string `json:"created_at"`
 }
 
+// Exchange représente une demande d'échange de service entre deux utilisateurs.
+type Exchange struct {
+	ID          int    `json:"id"`
+	ServiceID   int    `json:"service_id"`
+	RequesterID int    `json:"requester_id"`
+	OwnerID     int    `json:"owner_id"`
+	Status      string `json:"status"` // pending, accepted, rejected, cancelled, completed
+	CreatedAt   string `json:"created_at"`
+	UpdatedAt   string `json:"updated_at"`
+}
+
 // CreditTransaction trace une opération sur le solde de crédits-temps.
 type CreditTransaction struct {
 	ID         int    `json:"id"`
