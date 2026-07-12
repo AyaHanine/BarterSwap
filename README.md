@@ -104,7 +104,7 @@ go run .
 - Filtrage / recherche **côté serveur** via query params.
 - `POST` / `PUT` / `DELETE` nécessitent `X-User-ID` = propriétaire de l'annonce.
 
-### 3. Système d'échange
+### 3. Système d'échange ✅
 
 | Méthode | Path | Description |
 |---------|------|-------------|
@@ -115,6 +115,18 @@ go run .
 | PUT | `/api/exchanges/{id}/reject` | Refuser une demande |
 | PUT | `/api/exchanges/{id}/complete` | Marquer comme terminé |
 | PUT | `/api/exchanges/{id}/cancel` | Annuler |
+
+**Règles :**
+- Cycle de vie : `pending` → `accepted` → `completed` ; ou `rejected` / `cancelled`.
+- Un utilisateur ne peut pas demander son propre service.
+- Un service ne peut avoir qu'un seul échange `pending` ou `accepted` à la fois.
+- Le demandeur doit avoir assez de crédits pour lancer la demande.
+- À l'**acceptation** : crédits bloqués (débités du demandeur, pas encore crédités à l'offreur).
+- À la **completion** : crédits transférés définitivement à l'offreur.
+- À l'**annulation** d'un échange `accepted` : crédits restitués au demandeur.
+- `accept` / `reject` : offreur uniquement ; `cancel` : demandeur ou offreur.
+- `GET /api/exchanges?status={status}` : filtre côté serveur.
+- `GET /api/exchanges` : nécessite `X-User-ID` (échanges envoyés + reçus).
 
 ### 4. Évaluations
 
@@ -188,6 +200,29 @@ curl -s -o /dev/null -w '%{http_code}\n' -X DELETE http://localhost:8081/api/ser
   -H 'X-User-ID: 1'
 ```
 
+### Créer une demande d'échange (201)
+
+```bash
+curl -s -X POST http://localhost:8081/api/exchanges \
+  -H 'Content-Type: application/json' \
+  -H 'X-User-ID: 2' \
+  -d '{"service_id":1}'
+```
+
+### Accepter et terminer un échange
+
+```bash
+curl -s -X PUT http://localhost:8081/api/exchanges/1/accept -H 'X-User-ID: 1'
+curl -s -X PUT http://localhost:8081/api/exchanges/1/complete -H 'X-User-ID: 1'
+```
+
+### Lister ses échanges
+
+```bash
+curl -s 'http://localhost:8081/api/exchanges' -H 'X-User-ID: 2'
+curl -s 'http://localhost:8081/api/exchanges?status=pending' -H 'X-User-ID: 1'
+```
+
 ## Tests
 
 Prérequis : PostgreSQL accessible (par ex. `docker compose up -d db`).
@@ -228,6 +263,21 @@ Cas couverts (services) :
 | GET service inexistant | `404` |
 | PUT / DELETE d'un autre utilisateur | `403` |
 | Filtres `categorie`, `ville`, `search` | filtrage serveur |
+
+Cas couverts (échanges) :
+
+| Cas | Résultat attendu |
+|-----|------------------|
+| Créer une demande valide | `201` + statut `pending` |
+| Créer sans `X-User-ID` | `401` |
+| Demander son propre service | `400` |
+| Crédits insuffisants | `400` |
+| Demander un échange sur un service déjà réservé | `409` |
+| Accepter un échange | `200` + crédits bloqués |
+| Terminer un échange accepté | `200` + crédits transférés à l'offreur |
+| Annuler un échange accepté | `200` + crédits restitués |
+| GET échange inexistant | `404` |
+| Lister / filtrer par statut | filtrage serveur |
 
 ## Architecture
 
