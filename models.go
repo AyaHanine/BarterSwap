@@ -42,6 +42,18 @@ type Exchange struct {
 	UpdatedAt   string `json:"updated_at"`
 }
 
+// Review représente un avis laissé après un échange terminé.
+type Review struct {
+	ID          int    `json:"id"`
+	ExchangeID  int    `json:"exchange_id"`
+	AuthorID    int    `json:"author_id"`
+	TargetID    int    `json:"target_id"`
+	ServiceID   int    `json:"service_id"`
+	Note        int    `json:"note"`
+	Commentaire string `json:"commentaire,omitempty"`
+	CreatedAt   string `json:"created_at"`
+}
+
 // CreditTransaction trace une opération sur le solde de crédits-temps.
 type CreditTransaction struct {
 	ID         int    `json:"id"`

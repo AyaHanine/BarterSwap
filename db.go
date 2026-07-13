@@ -88,6 +88,21 @@ CREATE INDEX IF NOT EXISTS idx_exchanges_status ON exchanges (status);
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_exchanges_one_active_per_service
 ON exchanges (service_id) WHERE status IN ('pending', 'accepted');
+
+CREATE TABLE IF NOT EXISTS reviews (
+    id            SERIAL PRIMARY KEY,
+    exchange_id   INTEGER NOT NULL REFERENCES exchanges(id) ON DELETE CASCADE,
+    author_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    target_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    service_id    INTEGER NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+    note          INTEGER NOT NULL CHECK (note >= 1 AND note <= 5),
+    commentaire   TEXT NOT NULL DEFAULT '',
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (exchange_id, author_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_reviews_target ON reviews (target_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_service ON reviews (service_id);
 `
 	if _, err := db.Exec(schema); err != nil {
 		return fmt.Errorf("exec schema: %w", err)
