@@ -128,13 +128,20 @@ go run .
 - `GET /api/exchanges?status={status}` : filtre côté serveur.
 - `GET /api/exchanges` : nécessite `X-User-ID` (échanges envoyés + reçus).
 
-### 4. Évaluations
+### 4. Évaluations ✅
 
 | Méthode | Path | Description |
 |---------|------|-------------|
 | POST | `/api/exchanges/{id}/review` | Donner un avis |
 | GET | `/api/users/{id}/reviews` | Avis reçus par un utilisateur |
 | GET | `/api/services/{id}/reviews` | Avis sur un service |
+
+**Règles :**
+- L'échange doit être au statut `completed`.
+- Seuls le demandeur et l'offreur peuvent laisser un avis.
+- Un seul avis par participant et par échange.
+- Note entre `1` et `5` ; `commentaire` optionnel.
+- `POST` nécessite `X-User-ID` (l'auteur évalue l'autre partie).
 
 ### 5. Tableau de bord / Statistiques
 
@@ -223,6 +230,22 @@ curl -s 'http://localhost:8081/api/exchanges' -H 'X-User-ID: 2'
 curl -s 'http://localhost:8081/api/exchanges?status=pending' -H 'X-User-ID: 1'
 ```
 
+### Laisser un avis sur un échange terminé (201)
+
+```bash
+curl -s -X POST http://localhost:8081/api/exchanges/1/review \
+  -H 'Content-Type: application/json' \
+  -H 'X-User-ID: 2' \
+  -d '{"note":5,"commentaire":"Excellent service"}'
+```
+
+### Lister les avis reçus / sur un service
+
+```bash
+curl -s http://localhost:8081/api/users/1/reviews
+curl -s http://localhost:8081/api/services/1/reviews
+```
+
 ## Tests
 
 Prérequis : PostgreSQL accessible (par ex. `docker compose up -d db`).
@@ -278,6 +301,18 @@ Cas couverts (échanges) :
 | Annuler un échange accepté | `200` + crédits restitués |
 | GET échange inexistant | `404` |
 | Lister / filtrer par statut | filtrage serveur |
+
+Cas couverts (évaluations) :
+
+| Cas | Résultat attendu |
+|-----|------------------|
+| Laisser un avis sur un échange terminé | `201` |
+| Laisser un avis sans `X-User-ID` | `401` |
+| Laisser un avis sur un échange non terminé | `400` |
+| Note invalide | `400` |
+| Avis en double sur le même échange | `409` |
+| Avis par un tiers | `403` |
+| GET avis utilisateur / service inexistant | `404` |
 
 ## Architecture
 
