@@ -30,5 +30,9 @@ func NewRouter(app *App) http.Handler {
 	mux.HandleFunc("PUT /api/exchanges/{id}/complete", app.handleCompleteExchange)
 	mux.HandleFunc("PUT /api/exchanges/{id}/cancel", app.handleCancelExchange)
 
+	mux.HandleFunc("POST /api/exchanges/{id}/review", app.handleCreateReview)
+	mux.HandleFunc("GET /api/users/{id}/reviews", app.handleListUserReviews)
+	mux.HandleFunc("GET /api/services/{id}/reviews", app.handleListServiceReviews)
+
 	return chain(mux, recoveryMiddleware, loggingMiddleware, corsMiddleware)
 }

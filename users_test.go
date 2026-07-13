@@ -50,7 +50,7 @@ func setupTestAPI(t *testing.T) (*App, http.Handler, func()) {
 func cleanupTables(t *testing.T, db *sql.DB) {
 	t.Helper()
 	_, err := db.Exec(`
-TRUNCATE credit_transactions, exchanges, skills, services, users RESTART IDENTITY CASCADE`)
+TRUNCATE credit_transactions, reviews, exchanges, skills, services, users RESTART IDENTITY CASCADE`)
 	if err != nil {
 		t.Fatalf("cleanup: %v", err)
 	}
