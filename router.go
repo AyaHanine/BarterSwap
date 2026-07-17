@@ -15,6 +15,7 @@ func NewRouter(app *App) http.Handler {
 	mux.HandleFunc("PUT /api/users/{id}", app.handleUpdateUser)
 	mux.HandleFunc("GET /api/users/{id}/skills", app.handleGetUserSkills)
 	mux.HandleFunc("PUT /api/users/{id}/skills", app.handleSetUserSkills)
+	mux.HandleFunc("GET /api/users/{id}/stats", app.handleGetUserStats)
 
 	mux.HandleFunc("GET /api/services", app.handleListServices)
 	mux.HandleFunc("POST /api/services", app.handleCreateService)

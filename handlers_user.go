@@ -119,6 +119,21 @@ func (app *App) handleSetUserSkills(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, skills)
 }
 
+func (app *App) handleGetUserStats(w http.ResponseWriter, r *http.Request) {
+	id, err := pathID(r, "id")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "id invalide")
+		return
+	}
+
+	stats, err := app.GetUserStats(r.Context(), id)
+	if err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, stats)
+}
+
 func pathID(r *http.Request, name string) (int, error) {
 	return strconv.Atoi(r.PathValue(name))
 }

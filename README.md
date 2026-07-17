@@ -62,6 +62,7 @@ go run .
 | PUT | `/api/users/{id}` | Modifier son profil (`X-User-ID` requis) |
 | GET | `/api/users/{id}/skills` | Compétences d'un utilisateur |
 | PUT | `/api/users/{id}/skills` | Définir ses compétences (`X-User-ID` requis) |
+| GET | `/api/users/{id}/stats` | Statistiques d'un utilisateur |
 | GET | `/api/services` | Liste des services (filtres optionnels) |
 | POST | `/api/services` | Créer une annonce (`X-User-ID` requis) |
 | GET | `/api/services/{id}` | Détail d'un service |
@@ -143,11 +144,19 @@ go run .
 - Note entre `1` et `5` ; `commentaire` optionnel.
 - `POST` nécessite `X-User-ID` (l'auteur évalue l'autre partie).
 
-### 5. Tableau de bord / Statistiques
+### 5. Tableau de bord / Statistiques ✅
 
 | Méthode | Path | Description |
 |---------|------|-------------|
 | GET | `/api/users/{id}/stats` | Statistiques d'un utilisateur |
+
+**Données retournées :**
+- `services_actifs` : annonces actives de l'utilisateur
+- `echanges_completes` : échanges terminés (demandeur ou offreur)
+- `credit_balance` : solde actuel
+- `note_moyenne` / `nb_avis` : avis reçus
+- `total_gagne` : crédits gagnés via échanges (hors bienvenue)
+- `total_depense` : crédits dépensés nets (`spend` − `refund`)
 
 ## Exemples d'utilisation
 
@@ -246,6 +255,12 @@ curl -s http://localhost:8081/api/users/1/reviews
 curl -s http://localhost:8081/api/services/1/reviews
 ```
 
+### Statistiques d'un utilisateur
+
+```bash
+curl -s http://localhost:8081/api/users/1/stats
+```
+
 ## Tests
 
 Prérequis : PostgreSQL accessible (par ex. `docker compose up -d db`).
@@ -313,6 +328,15 @@ Cas couverts (évaluations) :
 | Avis en double sur le même échange | `409` |
 | Avis par un tiers | `403` |
 | GET avis utilisateur / service inexistant | `404` |
+
+Cas couverts (statistiques) :
+
+| Cas | Résultat attendu |
+|-----|------------------|
+| GET stats utilisateur neuf | `200` + solde 10, compteurs à 0 |
+| GET stats après échange terminé + avis | valeurs cohérentes (solde, gains, dépenses, note) |
+| GET stats utilisateur inexistant | `404` |
+| GET stats avec id invalide | `400` |
 
 ## Architecture
 

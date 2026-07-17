@@ -75,6 +75,14 @@ func (s *App) GetUserSkills(ctx context.Context, userID int) ([]Skill, error) {
 	return s.store.ListSkills(ctx, userID)
 }
 
+// GetUserStats retourne les statistiques du tableau de bord d'un utilisateur.
+func (s *App) GetUserStats(ctx context.Context, userID int) (UserStats, error) {
+	if userID <= 0 {
+		return UserStats{}, fmt.Errorf("%w: id invalide", ErrValidation)
+	}
+	return s.store.GetUserStats(ctx, userID)
+}
+
 // SetUserSkills remplace entièrement les compétences d'un utilisateur.
 func (s *App) SetUserSkills(ctx context.Context, actorID, userID int, skills []Skill) ([]Skill, error) {
 	if userID <= 0 {

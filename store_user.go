@@ -186,6 +186,68 @@ func (s *Store) userExists(ctx context.Context, id int) (bool, error) {
 	return true, nil
 }
 
+// GetUserStats calcule les statistiques du tableau de bord d'un utilisateur.
+func (s *Store) GetUserStats(ctx context.Context, userID int) (UserStats, error) {
+	exists, err := s.userExists(ctx, userID)
+	if err != nil {
+		return UserStats{}, err
+	}
+	if !exists {
+		return UserStats{}, ErrNotFound
+	}
+
+	stats := UserStats{UserID: userID}
+
+	err = s.db.QueryRowContext(ctx,
+		`SELECT credit_balance FROM users WHERE id = $1`, userID,
+	).Scan(&stats.CreditBalance)
+	if err != nil {
+		return UserStats{}, fmt.Errorf("get credit balance: %w", err)
+	}
+
+	err = s.db.QueryRowContext(ctx,
+		`SELECT COUNT(*) FROM services WHERE provider_id = $1 AND actif = TRUE`, userID,
+	).Scan(&stats.ServicesActifs)
+	if err != nil {
+		return UserStats{}, fmt.Errorf("count active services: %w", err)
+	}
+
+	err = s.db.QueryRowContext(ctx, `
+SELECT COUNT(*) FROM exchanges
+WHERE status = 'completed' AND (requester_id = $1 OR owner_id = $1)`, userID,
+	).Scan(&stats.EchangesCompletes)
+	if err != nil {
+		return UserStats{}, fmt.Errorf("count completed exchanges: %w", err)
+	}
+
+	var avg sql.NullFloat64
+	err = s.db.QueryRowContext(ctx, `
+SELECT AVG(note)::float8, COUNT(*) FROM reviews WHERE target_id = $1`, userID,
+	).Scan(&avg, &stats.NbAvis)
+	if err != nil {
+		return UserStats{}, fmt.Errorf("review stats: %w", err)
+	}
+	if avg.Valid {
+		stats.NoteMoyenne = avg.Float64
+	}
+
+	// total_gagne : crédits gagnés via des échanges (hors crédits de bienvenue).
+	// total_depense : dépenses nettes = spend − refund.
+	err = s.db.QueryRowContext(ctx, `
+SELECT
+  COALESCE(SUM(CASE WHEN type = 'earn' AND exchange_id IS NOT NULL THEN montant ELSE 0 END), 0),
+  COALESCE(SUM(CASE WHEN type = 'spend' THEN ABS(montant) ELSE 0 END), 0)
+    - COALESCE(SUM(CASE WHEN type = 'refund' THEN montant ELSE 0 END), 0)
+FROM credit_transactions
+WHERE user_id = $1`, userID,
+	).Scan(&stats.TotalGagne, &stats.TotalDepense)
+	if err != nil {
+		return UserStats{}, fmt.Errorf("credit totals: %w", err)
+	}
+
+	return stats, nil
+}
+
 func normalizePseudo(pseudo string) string {
 	return strings.TrimSpace(pseudo)
 }
