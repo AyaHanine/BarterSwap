@@ -261,6 +261,83 @@ curl -s http://localhost:8081/api/services/1/reviews
 curl -s http://localhost:8081/api/users/1/stats
 ```
 
+## Codes d'erreur
+
+Toutes les erreurs JSON ont le même format :
+
+```json
+{ "error": "message explicite" }
+```
+
+### Mapping HTTP ↔ erreurs sentinelles
+
+| Code HTTP | Sentinelle (`errors.go`) | Signification |
+|-----------|--------------------------|---------------|
+| `400 Bad Request` | `ErrValidation` | Données invalides (JSON, champs, règles métier) |
+| `401 Unauthorized` | `ErrUnauthorized` | Header `X-User-ID` manquant ou invalide |
+| `403 Forbidden` | `ErrForbidden` | Authentifié, mais pas autorisé sur cette ressource |
+| `404 Not Found` | `ErrNotFound` | Ressource introuvable |
+| `409 Conflict` | `ErrConflict` | Conflit d'état (unicité, réservation, avis doublon…) |
+| `500 Internal Server Error` | *(autre)* | Erreur inattendue (détail masqué côté client) |
+
+Les erreurs métier sont wrappées avec `%w` (ex. `données invalides: crédits insuffisants`) puis reconnues via `errors.Is` dans `writeServiceError`.
+
+### Erreurs fréquentes par domaine
+
+**Utilisateurs**
+
+| Situation | HTTP | Message typique |
+|-----------|------|-----------------|
+| Pseudo vide | `400` | `données invalides: pseudo obligatoire` |
+| Pseudo déjà pris | `409` | `conflit: pseudo déjà utilisé` |
+| Utilisateur inexistant | `404` | `ressource introuvable` |
+| Modifier le profil d'un autre | `403` | `accès interdit` |
+| Niveau de skill invalide | `400` | `données invalides: niveau invalide (...)` |
+| Corps JSON invalide | `400` | `corps JSON invalide` |
+| `id` URL non numérique | `400` | `id invalide` |
+
+**Services**
+
+| Situation | HTTP | Message typique |
+|-----------|------|-----------------|
+| Sans `X-User-ID` | `401` | `header X-User-ID requis` |
+| Catégorie hors liste | `400` | `données invalides: catégorie invalide` |
+| Compétence non possédée | `400` | `données invalides: l'utilisateur n'a pas la compétence "..."` |
+| Titre / durée / crédits invalides | `400` | `données invalides: ...` |
+| Service inexistant | `404` | `ressource introuvable` |
+| Modifier / supprimer l'annonce d'un autre | `403` | `accès interdit` |
+
+**Échanges**
+
+| Situation | HTTP | Message typique |
+|-----------|------|-----------------|
+| Sans `X-User-ID` | `401` | `header X-User-ID requis` |
+| Demander son propre service | `400` | `données invalides: impossible de demander son propre service` |
+| Crédits insuffisants | `400` | `données invalides: crédits insuffisants` |
+| Service inactif | `400` | `données invalides: le service n'est pas actif` |
+| Service déjà réservé (`pending`/`accepted`) | `409` | `conflit: le service est déjà réservé` |
+| Accepter / refuser sans être l'offreur | `403` | `accès interdit` |
+| Transition de statut invalide | `409` | `conflit: l'échange n'est pas en attente` (ex.) |
+| Échange inexistant | `404` | `ressource introuvable` |
+| Statut de filtre invalide | `400` | `données invalides: statut invalide` |
+
+**Avis**
+
+| Situation | HTTP | Message typique |
+|-----------|------|-----------------|
+| Sans `X-User-ID` | `401` | `header X-User-ID requis` |
+| Échange non `completed` | `400` | `données invalides: l'échange doit être terminé pour laisser un avis` |
+| Note hors 1–5 | `400` | `données invalides: la note doit être entre 1 et 5` |
+| Auteur hors participants | `403` | `accès interdit` |
+| 2ᵉ avis du même auteur | `409` | `conflit: avis déjà laissé pour cet échange` |
+
+**Stats**
+
+| Situation | HTTP | Message typique |
+|-----------|------|-----------------|
+| Utilisateur inexistant | `404` | `ressource introuvable` |
+| `id` invalide | `400` | `id invalide` / `données invalides: id invalide` |
+
 ## Tests
 
 Prérequis : PostgreSQL accessible (par ex. `docker compose up -d db`).
@@ -274,8 +351,11 @@ go test -v -cover ./...
 ```
 
 Collections Postman :
+- `postman/BarterSwap-Demo-Complete.postman_collection.json` — **parcours complet soutenance** (comme `demo.sh`)
 - `postman/BarterSwap-Users.postman_collection.json`
 - `postman/BarterSwap-Services.postman_collection.json`
+
+Pour la démo : importer `BarterSwap-Demo-Complete`, lancer **Collection Runner** dans l'ordre. Les IDs (`aliceId`, `bobId`, `serviceId`…) sont sauvegardés automatiquement.
 
 Cas couverts (utilisateurs) :
 
