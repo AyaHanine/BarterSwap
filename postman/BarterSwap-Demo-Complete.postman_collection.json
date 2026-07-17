@@ -1,0 +1,828 @@
+{
+  "info": {
+    "_postman_id": "e4ab0aef-e6c2-4b8c-a4c5-cbee4a2799ab",
+    "name": "BarterSwap Demo Complete",
+    "description": "Parcours complet soutenance. Base URL: http://localhost:8081\n1) docker compose up --build -d\n2) Import this file\n3) Run Collection Runner in order",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8081"
+    },
+    {
+      "key": "aliceId",
+      "value": "1"
+    },
+    {
+      "key": "bobId",
+      "value": "2"
+    },
+    {
+      "key": "charlieId",
+      "value": "3"
+    },
+    {
+      "key": "serviceId",
+      "value": "1"
+    },
+    {
+      "key": "expensiveServiceId",
+      "value": "2"
+    },
+    {
+      "key": "exchangeId",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Intro",
+      "item": [
+        {
+          "name": "1. Health 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('status ok', () => pm.expect(pm.response.json().status).to.eql('ok'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Users",
+      "item": [
+        {
+          "name": "2. Create Alice 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const u = pm.response.json();",
+                  "pm.test('credit_balance = 10', () => pm.expect(u.credit_balance).to.eql(10));",
+                  "pm.collectionVariables.set('aliceId', String(u.id));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pseudo\": \"alice\",\n  \"bio\": \"Jardinage\",\n  \"ville\": \"Lyon\"\n}"
+            }
+          }
+        },
+        {
+          "name": "3. Create Bob 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const u = pm.response.json();",
+                  "pm.test('credit_balance = 10', () => pm.expect(u.credit_balance).to.eql(10));",
+                  "pm.collectionVariables.set('bobId', String(u.id));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pseudo\": \"bob\",\n  \"bio\": \"Apprend le jardinage\",\n  \"ville\": \"Lyon\"\n}"
+            }
+          }
+        },
+        {
+          "name": "4. Empty pseudo 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pseudo\": \"\",\n  \"ville\": \"Lyon\"\n}"
+            }
+          }
+        },
+        {
+          "name": "5. Alice skills 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-User-ID",
+                "value": "{{aliceId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users/{aliceId}/skills",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"skills\": [\n    { \"nom\": \"Jardinage\", \"niveau\": \"expert\" }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "6. Alice profile 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('credit_balance = 10', () => pm.expect(pm.response.json().credit_balance).to.eql(10));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/users/{aliceId}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Services",
+      "item": [
+        {
+          "name": "7. Create service 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const s = pm.response.json();",
+                  "pm.test('credits = 2', () => pm.expect(s.credits).to.eql(2));",
+                  "pm.collectionVariables.set('serviceId', String(s.id));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-User-ID",
+                "value": "{{aliceId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/services",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titre\": \"Taille de haies\",\n  \"description\": \"Haies et arbustes\",\n  \"categorie\": \"Jardinage\",\n  \"duree_minutes\": 60,\n  \"credits\": 2,\n  \"ville\": \"Lyon\"\n}"
+            }
+          }
+        },
+        {
+          "name": "8. Missing skill 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-User-ID",
+                "value": "{{aliceId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/services",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titre\": \"Cours de piano\",\n  \"categorie\": \"Musique\",\n  \"duree_minutes\": 45,\n  \"credits\": 3\n}"
+            }
+          }
+        },
+        {
+          "name": "9. Filter categorie 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const list = pm.response.json();",
+                  "pm.test('at least 1', () => pm.expect(list.length).to.be.at.least(1));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/services?categorie=Jardinage"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Exchanges",
+      "item": [
+        {
+          "name": "10. Own service 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-User-ID",
+                "value": "{{aliceId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/exchanges",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service_id\": {{serviceId}}\n}"
+            }
+          }
+        },
+        {
+          "name": "11. Bob creates exchange 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const ex = pm.response.json();",
+                  "pm.test('pending', () => pm.expect(ex.status).to.eql('pending'));",
+                  "pm.collectionVariables.set('exchangeId', String(ex.id));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-User-ID",
+                "value": "{{bobId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/exchanges",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service_id\": {{serviceId}}\n}"
+            }
+          }
+        },
+        {
+          "name": "12a. Create Charlie 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('charlieId', String(pm.response.json().id));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pseudo\": \"charlie\",\n  \"ville\": \"Lyon\"\n}"
+            }
+          }
+        },
+        {
+          "name": "12b. Already reserved 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-User-ID",
+                "value": "{{charlieId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/exchanges",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service_id\": {{serviceId}}\n}"
+            }
+          }
+        },
+        {
+          "name": "13a. Alice accept 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('accepted', () => pm.expect(pm.response.json().status).to.eql('accepted'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-User-ID",
+                "value": "{{aliceId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/exchanges/{exchangeId}/accept"
+          }
+        },
+        {
+          "name": "13b. Bob balance 8",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Bob=8', () => pm.expect(pm.response.json().credit_balance).to.eql(8));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/users/{bobId}"
+          }
+        },
+        {
+          "name": "13c. Alice balance 10",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Alice=10', () => pm.expect(pm.response.json().credit_balance).to.eql(10));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/users/{aliceId}"
+          }
+        },
+        {
+          "name": "14a. Alice complete 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('completed', () => pm.expect(pm.response.json().status).to.eql('completed'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-User-ID",
+                "value": "{{aliceId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/exchanges/{exchangeId}/complete"
+          }
+        },
+        {
+          "name": "14b. Bob balance still 8",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Bob=8', () => pm.expect(pm.response.json().credit_balance).to.eql(8));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/users/{bobId}"
+          }
+        },
+        {
+          "name": "14c. Alice balance 12",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Alice=12', () => pm.expect(pm.response.json().credit_balance).to.eql(12));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/users/{aliceId}"
+          }
+        },
+        {
+          "name": "15a. Charlie Cuisine skill",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-User-ID",
+                "value": "{{charlieId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users/{charlieId}/skills",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"skills\": [\n    { \"nom\": \"Cuisine\", \"niveau\": \"débutant\" }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "15b. Expensive service 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('expensiveServiceId', String(pm.response.json().id));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-User-ID",
+                "value": "{{charlieId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/services",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titre\": \"Repas 20 personnes\",\n  \"categorie\": \"Cuisine\",\n  \"duree_minutes\": 120,\n  \"credits\": 50,\n  \"ville\": \"Lyon\"\n}"
+            }
+          }
+        },
+        {
+          "name": "15c. Insufficient credits 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-User-ID",
+                "value": "{{bobId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/exchanges",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service_id\": {{expensiveServiceId}}\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Reviews and Stats",
+      "item": [
+        {
+          "name": "16. Bob review 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('note 5', () => pm.expect(pm.response.json().note).to.eql(5));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-User-ID",
+                "value": "{{bobId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/exchanges/{exchangeId}/review",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": 5,\n  \"commentaire\": \"Excellent travail\"\n}"
+            }
+          }
+        },
+        {
+          "name": "17. Duplicate review 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-User-ID",
+                "value": "{{bobId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/exchanges/{exchangeId}/review",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": 4\n}"
+            }
+          }
+        },
+        {
+          "name": "18. Alice stats 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const s = pm.response.json();",
+                  "pm.test('balance 12', () => pm.expect(s.credit_balance).to.eql(12));",
+                  "pm.test('completed 1', () => pm.expect(s.echanges_completes).to.eql(1));",
+                  "pm.test('nb_avis 1', () => pm.expect(s.nb_avis).to.eql(1));",
+                  "pm.test('total_gagne 2', () => pm.expect(s.total_gagne).to.eql(2));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/users/{aliceId}/stats"
+          }
+        },
+        {
+          "name": "19. Alice reviews 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('at least 1', () => pm.expect(pm.response.json().length).to.be.at.least(1));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/users/{aliceId}/reviews"
+          }
+        },
+        {
+          "name": "20. Bob exchanges 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('at least 1', () => pm.expect(pm.response.json().length).to.be.at.least(1));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-ID",
+                "value": "{{bobId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/exchanges"
+          }
+        },
+        {
+          "name": "21. Filter completed 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-ID",
+                "value": "{{bobId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/exchanges?status=completed"
+          }
+        }
+      ]
+    }
+  ]
+}
